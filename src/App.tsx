@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import "./App.css";
 import { getMockData } from "./mock/getMockData";
 import type { MockData } from "./mock/getMockData";
-import LoadingSpinner from "./lib/loadingSpinner";
+import LoadingSpinner from "./lib/LoadingSpinner";
+import Card from "./components/Card";
+import Dialog from "./components/Dialog";
+import "./App.css";
 
 function App() {
   const [pageNum, setPageNum] = useState(0); // 현재 페이지
@@ -10,6 +12,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false); // 로딩중
   const [isEnd, setIsEnd] = useState(false); // 페이지의 끝
   const targetRef = useRef<HTMLDivElement>(null); // 무한 스크롤의 trigger 지점 마킹
+  const [showModal, setShowModal] = useState(false);
 
   // trigger가 되었을 때 함수 실행
   useEffect(() => {
@@ -53,6 +56,7 @@ function App() {
 
       if (isMounted) {
         setLoadedData((prevState) => [...prevState, ...datas]);
+        console.log("loaded", endOfPage);
         setIsEnd(endOfPage);
       }
     }
@@ -69,22 +73,28 @@ function App() {
   }, [pageNum]);
 
   return (
-    <>
-      <div className="container">
-        <div className="info-section">
-          {loadedData?.map((item, idx) => (
-            <div key={`${idx}_${item.productId}`} className="info-item">
-              <h3>상품명: {item.productName}</h3>
-              <h5>구매일: {item.boughtDate}</h5>
-              <span>상품 가격: ${item.price}</span>
-            </div>
-          ))}
-          {isLoading && <LoadingSpinner />}
-          {isEnd && <p>마지막 상품입니다!</p>}
-        </div>
+    <div className="container">
+      <div className="info-section">
+        <h1>다사와</h1>
+        <h2>다사고 싶은 물건들만 모았다!</h2>
+        {loadedData?.map((item, idx) => (
+          <Card item={item} key={idx} />
+        ))}
+        {isLoading && <LoadingSpinner />}
+        {isEnd && <p>마지막 상품입니다!</p>}
+        <div style={{ height: 1 }} ref={targetRef} />
       </div>
-      <div ref={targetRef} />
-    </>
+      <div className="total-section" onClick={() => setShowModal(true)}>
+        합계 확인
+      </div>
+      <Dialog
+        isOpen={showModal}
+        title="합계"
+        price={loadedData.reduce((acc, item) => acc + item.price, 0)}
+        buttonLabel="닫기"
+        onClickButton={() => setShowModal(false)}
+      />
+    </div>
   );
 }
 
